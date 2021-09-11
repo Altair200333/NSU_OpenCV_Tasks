@@ -1,9 +1,11 @@
 import cv2 as cv
 import math
 import numpy as np
+from tools import *
+
 
 img = cv.imread("imgs/car.jpg")
-img = cv.resize(img, (600, 350))
+img = scaleImg(img, 0.5)
 
 hsv_img = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 lab_img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
@@ -15,6 +17,7 @@ selectedColor = np.array((250, 250, 255), np.uint8)
 
 drawing = False
 radius = 10
+
 
 def line_drawing(event, x, y, flags, param):
     global selectedColor, low, high, drawing, radius
@@ -33,12 +36,14 @@ def line_drawing(event, x, y, flags, param):
             radius += 1
         updateFilter(radius, selectedColor)
 
+
 def updateFilter(radius, selectedColor):
     global low, high
     low = np.array((0, np.clip(selectedColor[1] - radius, 0, 255), np.clip(selectedColor[2] - radius, 0, 255)),
                    np.uint8)
     high = np.array((255, np.clip(selectedColor[1] + radius, 0, 255), np.clip(selectedColor[2] + radius, 0, 255)),
                     np.uint8)
+
 
 cv.imshow("img", img)
 

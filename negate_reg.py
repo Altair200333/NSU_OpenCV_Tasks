@@ -1,7 +1,9 @@
 import cv2 as cv
 import numpy as np
+from tools import *
 
-img = cv.imread('imgs/car.jpg')
+img = cv.imread('imgs/niki.jpg')
+img = clipImg(img, 600)
 
 width = img.shape[1]
 height = img.shape[0]
@@ -14,6 +16,8 @@ start_y = 0
 
 end_x = 0
 end_y = 0
+
+transform_mode = 0
 
 
 def onMouse(event, x, y, flags, param):
@@ -53,8 +57,19 @@ while True:
         y0 = min(start_y, end_y)
         y1 = max(start_y, end_y)
 
-        overlay[y0 + 1:y1, x0 + 1: x1, :] = 255 - img[y0 + 1:y1, x0 + 1: x1, :]
-        mask[y0:y1, x0: x1, :] = 255
+        if transform_mode == 2:
+            overlay[y0 + 1:y1, x0 + 1: x1, :] = 255 - img[y0 + 1:y1, x0 + 1: x1, :]
+        else:
+            lab_img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
+            if transform_mode == 0:
+                lab_img[:, :, 1] = lab_img[:, :, 2]
+            elif transform_mode == 1:
+                lab_img[:, :, 2] = lab_img[:, :, 1]
+            collapsed_image = cv.cvtColor(lab_img, cv.COLOR_Lab2BGR)
+
+            overlay[y0 + 1:y1, x0 + 1: x1, :] = collapsed_image[y0 + 1:y1, x0 + 1: x1, :]
+
+        mask[y0:y1 + 1, x0: x1 + 1, :] = 255
         mask_inv = cv.bitwise_not(mask)
 
     result = cv.bitwise_and(img, mask_inv)
@@ -64,5 +79,9 @@ while True:
     cv.imshow('win', result)
 
     k = cv.waitKey(1) & 0xFF
+    if k == ord('q'):
+        transform_mode = (transform_mode - 1) % 3
+    if k == ord('e'):
+        transform_mode = (transform_mode + 1) % 3
     if k == 27:
         break
