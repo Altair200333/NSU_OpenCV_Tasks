@@ -33,7 +33,6 @@ def line_drawing(event, x, y, flags, param):
             radius += 1
         updateFilter(radius, selectedColor)
 
-
 def updateFilter(radius, selectedColor):
     global low, high
     low = np.array((0, np.clip(selectedColor[1] - radius, 0, 255), np.clip(selectedColor[2] - radius, 0, 255)),
@@ -41,8 +40,8 @@ def updateFilter(radius, selectedColor):
     high = np.array((255, np.clip(selectedColor[1] + radius, 0, 255), np.clip(selectedColor[2] + radius, 0, 255)),
                     np.uint8)
 
-
 cv.imshow("img", img)
+
 cv.setMouseCallback('img', line_drawing)
 
 while (1):
@@ -55,7 +54,8 @@ while (1):
     lab_copy = lab_img.copy()
     lab_copy[:, :, 0] = 180
     cv.imshow("lab", cv.cvtColor(lab_copy, cv.COLOR_Lab2BGR))
+    cv.setMouseCallback('lab', line_drawing)
 
-    k = cv.waitKey(10) & 0xFF
+    k = cv.waitKey(2) & 0xFF
     if k == 27:
         break
