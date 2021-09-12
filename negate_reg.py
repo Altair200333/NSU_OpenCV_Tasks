@@ -41,6 +41,14 @@ def onMouse(event, x, y, flags, param):
         pass
 
 
+def plotHist(dst, hist):
+    stack = np.vstack((np.linspace(0, 256, 256), hist.reshape(-1))).T
+    stack[:, 1] = dst.shape[0] - stack[:, 1]
+    
+    cv.polylines(dst, [np.int32(stack)], True, (0, 255, 255))
+
+
+histogram_canvas = np.zeros((200, 256, 3), np.uint8)
 cv.setMouseCallback('win', onMouse)
 
 while True:
@@ -77,6 +85,11 @@ while True:
     result = cv.add(result, inv)
 
     cv.imshow('win', result)
+
+    histogram_canvas[:, :, :] = 0
+    hist = cv.calcHist([result[:, :, 1]], [0], None, [256], [0, 256])
+    plotHist(histogram_canvas, hist / hist.max() * 100)
+    cv.imshow("hist", histogram_canvas)
 
     k = cv.waitKey(1) & 0xFF
     if k == ord('q'):
