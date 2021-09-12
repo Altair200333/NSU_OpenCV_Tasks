@@ -44,13 +44,24 @@ def onMouse(event, x, y, flags, param):
 def plotHist(dst, hist):
     stack = np.vstack((np.linspace(0, 256, 256), hist.reshape(-1))).T
     stack[:, 1] = dst.shape[0] - stack[:, 1]
-    
+
     cv.polylines(dst, [np.int32(stack)], True, (0, 255, 255))
 
 
 histogram_canvas = np.zeros((200, 256, 3), np.uint8)
 cv.setMouseCallback('win', onMouse)
 
+
+def histogram_result():
+    histogram_canvas[:, :, :] = 0
+    hist = cv.calcHist([result[:, :, 1]], [0], None, [256], [0, 256])
+    plotHist(histogram_canvas, hist / hist.max() * 100)
+    cv.imshow("hist", histogram_canvas)
+
+gradient_map = np.ones((256, 256, 3), np.uint8)
+for i in range(0, 255):
+    for j in range(0, 255):
+        gradient_map[i, j] = [200, i, j]
 while True:
 
     overlay = np.zeros((height, width, 3), np.uint8)
@@ -86,10 +97,15 @@ while True:
 
     cv.imshow('win', result)
 
-    histogram_canvas[:, :, :] = 0
-    hist = cv.calcHist([result[:, :, 1]], [0], None, [256], [0, 256])
-    plotHist(histogram_canvas, hist / hist.max() * 100)
-    cv.imshow("hist", histogram_canvas)
+    output = np.zeros((256, 256, 3), np.uint8)
+    #output = np.broadcast(np.arange(0, 255).T, np.arange(0, 255))
+    lab_result = cv.cvtColor(result, cv.COLOR_BGR2LAB)
+
+    output[lab_result[:, :, 1], 255 - lab_result[:, :, 2], :] = gradient_map[lab_result[:, :, 1], 255 - lab_result[:, :, 2], :]
+    output = cv.cvtColor(output, cv.COLOR_Lab2BGR)
+    cv.imshow('lab_spread', output)
+
+    histogram_result()
 
     k = cv.waitKey(1) & 0xFF
     if k == ord('q'):
