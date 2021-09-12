@@ -23,6 +23,9 @@ transform_mode = 0
 def onMouse(event, x, y, flags, param):
     global drawing, start_x, start_y, end_x, end_y
 
+    x = np.clip(x, 0, width - 1)
+    y = np.clip(y, 0, height - 1)
+
     if event == cv.EVENT_LBUTTONDOWN:
         drawing = True
         start_x = x
@@ -61,7 +64,9 @@ def histogram_result():
 gradient_map = np.ones((256, 256, 3), np.uint8)
 for i in range(0, 255):
     for j in range(0, 255):
-        gradient_map[i, j] = [200, i, j]
+        gradient_map[i, j] = [200, j, 255-i]
+
+cv.imshow("grad", cv.cvtColor(gradient_map, cv.COLOR_Lab2BGR) )
 while True:
 
     overlay = np.zeros((height, width, 3), np.uint8)
@@ -97,8 +102,7 @@ while True:
 
     cv.imshow('win', result)
 
-    output = np.zeros((256, 256, 3), np.uint8)
-    #output = np.broadcast(np.arange(0, 255).T, np.arange(0, 255))
+    output = np.ones((256, 256, 3), np.uint8)*100
     lab_result = cv.cvtColor(result, cv.COLOR_BGR2LAB)
 
     output[lab_result[:, :, 1], 255 - lab_result[:, :, 2], :] = gradient_map[lab_result[:, :, 1], 255 - lab_result[:, :, 2], :]
