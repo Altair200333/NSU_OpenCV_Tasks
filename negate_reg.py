@@ -73,7 +73,7 @@ while True:
     mask = np.zeros((height, width, 3), np.uint8)
     mask_inv = np.ones((height, width, 3), np.uint8) * 255
     if drawing:
-        cv.rectangle(overlay, (start_x, start_y), (end_x, end_y), (200, 200, 200))
+        #cv.rectangle(overlay, (start_x, start_y), (end_x, end_y), (200, 200, 200))
 
         x0 = min(start_x, end_x)
         x1 = max(start_x, end_x)
@@ -81,19 +81,23 @@ while True:
         y0 = min(start_y, end_y)
         y1 = max(start_y, end_y)
 
-        if transform_mode == 2:
-            overlay[y0 + 1:y1, x0 + 1: x1, :] = 255 - img[y0 + 1:y1, x0 + 1: x1, :]
+        if transform_mode == 0:
+            overlay[y0:y1, x0: x1, :] = 255 - img[y0:y1, x0: x1, :]
         else:
+
             lab_img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
-            if transform_mode == 0:
+            if transform_mode == 1:
                 lab_img[:, :, 1] = lab_img[:, :, 2]
-            elif transform_mode == 1:
+            elif transform_mode == 2:
                 lab_img[:, :, 2] = lab_img[:, :, 1]
+            elif transform_mode == 3:
+                lab_img[:, :, 2] = 255 - lab_img[:, :, 2]
+                lab_img[:, :, 1] = 255 - lab_img[:, :, 1]
             collapsed_image = cv.cvtColor(lab_img, cv.COLOR_Lab2BGR)
 
-            overlay[y0 + 1:y1, x0 + 1: x1, :] = collapsed_image[y0 + 1:y1, x0 + 1: x1, :]
+            overlay[y0:y1, x0: x1, :] = collapsed_image[y0:y1, x0: x1, :]
 
-        mask[y0:y1 + 1, x0: x1 + 1, :] = 255
+        mask[y0:y1, x0: x1, :] = 255
         mask_inv = cv.bitwise_not(mask)
 
     result = cv.bitwise_and(img, mask_inv)
@@ -112,9 +116,11 @@ while True:
     histogram_result()
 
     k = cv.waitKey(1) & 0xFF
+
+    modes = 4
     if k == ord('q'):
-        transform_mode = (transform_mode - 1) % 3
+        transform_mode = (transform_mode - 1) % modes
     if k == ord('e'):
-        transform_mode = (transform_mode + 1) % 3
+        transform_mode = (transform_mode + 1) % modes
     if k == 27:
         break
