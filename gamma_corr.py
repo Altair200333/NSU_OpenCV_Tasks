@@ -85,7 +85,7 @@ while True:
     cv.imshow("br_cor", br_cont)
     cv.imshow("gamma_corrected", corr)
 
-    histogram_canvas[:, :, :] = 0
+    histogram_canvas[:, :, :] = 70
     plotBinHistogram(cv.cvtColor(br_cont, cv.COLOR_BGR2GRAY), histogram_canvas)
     cv.imshow("histogram", histogram_canvas)
 
