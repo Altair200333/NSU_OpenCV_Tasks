@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 from tools import *
+from histogram_utils import *
 from matplotlib import pyplot as plt
 
 img = cv.imread("imgs/lena.png")
@@ -61,17 +62,6 @@ def contrastset(x):
     global contrast_val
     contrast_val = x - 127
 
-
-def plotHist(img, dst):
-    hist, bins = np.histogram(img.ravel(), 256, [0, 256])
-
-    hist = hist / hist.max() * 200
-    stack = np.vstack((np.linspace(0, 256, 256), hist.reshape(-1))).T
-    stack[:, 1] = dst.shape[0] - stack[:, 1]
-
-    cv.polylines(dst, [np.int32(stack)], False, (0, 255, 255))
-
-
 cv.namedWindow("img")
 cv.createTrackbar('gamma', 'img', 0, 1000, gammaSet)
 cv.createTrackbar('Brightness', 'img', 0, 255, brightset)
@@ -96,7 +86,7 @@ while True:
     cv.imshow("gamma_corrected", corr)
 
     histogram_canvas[:, :, :] = 0
-    plotHist(cv.cvtColor(br_cont, cv.COLOR_BGR2GRAY), histogram_canvas)
+    plotBinHistogram(cv.cvtColor(br_cont, cv.COLOR_BGR2GRAY), histogram_canvas)
     cv.imshow("histogram", histogram_canvas)
 
     k = cv.waitKey(1) & 0xFF
