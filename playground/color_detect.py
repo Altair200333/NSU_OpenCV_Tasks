@@ -4,7 +4,7 @@ import numpy as np
 from tools import *
 
 
-img = cv.imread("imgs/car.jpg")
+img = cv.imread("../imgs/car.jpg")
 img = scaleImg(img, 0.5)
 
 hsv_img = cv.cvtColor(img, cv.COLOR_BGR2HSV)

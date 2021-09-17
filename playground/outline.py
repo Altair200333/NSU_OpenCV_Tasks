@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 print("start")
-img = cv2.imread('imgs/cat.jpg')
+img = cv2.imread('../imgs/cat.jpg')
 
 red_noise = cv2.GaussianBlur(img, (3,3), 0,0, cv2.BORDER_DEFAULT)
 gray = cv2.cvtColor(red_noise, cv2.COLOR_RGB2GRAY)

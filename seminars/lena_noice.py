@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from tools import *
 
-img = cv.imread("imgs/lena.png")
+img = cv.imread("../imgs/lena.png")
 img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 img = clipImg(img, 600)
 
@@ -64,7 +64,7 @@ cv.createTrackbar('noise range', 'img', 20, 255, updateRange)
 
 
 while True:
-    cv.imshow("img", noise_images[shownId])
+    cv.imshow("img", noise_images[shownId%noise_imgs_count])
 
     cv.imshow("filtered", np.uint8(filtered))
 

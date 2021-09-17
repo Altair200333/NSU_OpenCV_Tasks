@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from tools import *
 
-img = cv.imread("imgs/page2.png")
+img = cv.imread("../imgs/page2.png")
 
 img = clipImg(img, 600)
 

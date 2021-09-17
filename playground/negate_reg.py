@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from tools import *
 
-img = cv.imread('imgs/niki.jpg')
+img = cv.imread('../imgs/niki.jpg')
 img = clipImg(img, 600)
 
 width = img.shape[1]

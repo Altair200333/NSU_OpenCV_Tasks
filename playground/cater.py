@@ -4,7 +4,7 @@ import numpy as np
 
 print("start")
 
-img = cv2.imread('imgs/cat.png')
+img = cv2.imread('../imgs/cat.png')
 img = cv2.resize(img, (500, 600), interpolation=cv2.INTER_AREA)
 src = img.copy()
 
@@ -101,4 +101,4 @@ while (1):
         print("clear")
         img = src.copy()
     if k == ord('s'):
-        cv2.imwrite("imgs/out.png", img)
+        cv2.imwrite("../imgs/out.png", img)

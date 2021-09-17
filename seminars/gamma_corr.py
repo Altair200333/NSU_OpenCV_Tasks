@@ -1,10 +1,7 @@
-import cv2 as cv
-import numpy as np
 from tools import *
-from histogram_utils import *
-from matplotlib import pyplot as plt
+from playground.histogram_utils import *
 
-img = cv.imread("imgs/lena.png")
+img = cv.imread("../imgs/hana.jpg")
 img = clipImg(img, 600)
 
 
