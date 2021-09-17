@@ -21,31 +21,52 @@ def noiseImage(img):
     result = np.uint8(np.clip(noise + np.int32(img), 0, 255))
     return result
 
+filtered = img
 
 noise_imgs_count = 15
 noise_images = []
-for i in range(noise_imgs_count):
-    noise_images.append(noiseImage(img))
 
 shownId = 0
-
 
 def setShownId(x):
     global shownId
     shownId = x
 
+def generateNoiseImgs(x):
+    global noise_imgs_count, noise_images, img, shownId
+    x = max(1, x)
+    noise_imgs_count = x
+    noise_images.clear()
+    for i in range(noise_imgs_count):
+        noise_images.append(noiseImage(img))
+
+    shownId = min(noise_imgs_count - 1, shownId)
+
+    filter_noised()
+
+def filter_noised():
+    global filtered
+    filtered = np.zeros(img.shape, dtype=np.float64)
+    for i in range(noise_imgs_count):
+        filtered += np.float64(noise_images[i])
+    filtered[:, :] = np.float64(filtered[:, :]) / noise_imgs_count
+
+def updateRange(x):
+    global noise_range
+    noise_range = x
+    generateNoiseImgs(noise_imgs_count)
+
+generateNoiseImgs(10)
 
 cv.createTrackbar('show img[i]', 'img', 0, noise_imgs_count - 1, setShownId)
+cv.createTrackbar('noise_images', 'img', 2, 100, generateNoiseImgs)
+cv.createTrackbar('noise range', 'img', 20, 255, updateRange)
+
 
 while True:
     cv.imshow("img", noise_images[shownId])
 
-    filter = np.zeros(img.shape, dtype=np.float64)
-
-    for i in range(noise_imgs_count):
-        filter += np.float64(noise_images[i])
-    filter[:, :] = np.float64(filter[:, :])/noise_imgs_count
-    cv.imshow("filtered", np.uint8(filter))
+    cv.imshow("filtered", np.uint8(filtered))
 
     k = cv.waitKey(1) & 0xFF
 
