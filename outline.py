@@ -19,7 +19,8 @@ grad = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, -30)
 #canny = cv2.Canny(img, 100, 120)
 
 cv2.imshow("image", img)
-cv2.imshow("sobel_y", grad)
+cv2.imshow("sobel_x", grad_x)
+cv2.imshow("sobel_abs_x", abs_grad_x)
 
 
 while (1):
