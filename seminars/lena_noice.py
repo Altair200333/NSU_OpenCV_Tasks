@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from tools import *
 
-img = cv.imread("../imgs/lena.png")
+img = cv.imread("../imgs/portraits/lena.png")
 img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 img = clipImg(img, 600)
 

@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from tools import *
 
-img = cv.imread('../imgs/niki.jpg')
+img = cv.imread('../imgs/portraits/niki.jpg')
 img = clipImg(img, 600)
 
 gradient_map = np.ones((256, 256, 3), np.uint8)

@@ -1,7 +1,7 @@
 from tools import *
-from playground.histogram_utils import *
+from histogram_utils import *
 
-img = cv.imread("../imgs/hana.jpg")
+img = cv.imread("../imgs/portraits/hana.jpg")
 img = clipImg(img, 600)
 
 

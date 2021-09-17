@@ -1,8 +1,9 @@
 import cv2 as cv
 import numpy as np
 from tools import *
+from histogram_utils import *
 
-img = cv.imread('../imgs/niki.jpg')
+img = cv.imread('../imgs/portraits/niki.jpg')
 img = clipImg(img, 600)
 
 width = img.shape[1]
@@ -113,7 +114,9 @@ while True:
     output = cv.cvtColor(output, cv.COLOR_Lab2BGR)
     cv.imshow('lab_spread', output)
 
-    histogram_result()
+    histogram_canvas[:, :, :] = 0
+    plotBinHistogram(cv.cvtColor(result, cv.COLOR_BGR2GRAY), histogram_canvas)
+    cv.imshow("histogram", histogram_canvas)
 
     k = cv.waitKey(1) & 0xFF
 
