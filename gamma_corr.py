@@ -69,7 +69,7 @@ def plotHist(img, dst):
     stack = np.vstack((np.linspace(0, 256, 256), hist.reshape(-1))).T
     stack[:, 1] = dst.shape[0] - stack[:, 1]
 
-    cv.polylines(dst, [np.int32(stack)], True, (0, 255, 255))
+    cv.polylines(dst, [np.int32(stack)], False, (0, 255, 255))
 
 
 cv.namedWindow("img")
@@ -82,7 +82,7 @@ histogram_canvas = np.zeros((200, 256, 3), np.uint8)
 img_yuv = cv.cvtColor(img, cv.COLOR_BGR2YUV)
 
 # equalize the histogram of the Y channel
-img_yuv[:,:,0] = cv.equalizeHist(img_yuv[:,:,0])
+img_yuv[:, :, 0] = cv.equalizeHist(img_yuv[:, :, 0])
 
 # convert the YUV image back to RGB format
 img_output = cv.cvtColor(img_yuv, cv.COLOR_YUV2BGR)
@@ -96,9 +96,8 @@ while True:
     cv.imshow("gamma_corrected", corr)
 
     histogram_canvas[:, :, :] = 0
-    plotHist(cv.cvtColor(img_output, cv.COLOR_BGR2GRAY), histogram_canvas)
+    plotHist(cv.cvtColor(br_cont, cv.COLOR_BGR2GRAY), histogram_canvas)
     cv.imshow("histogram", histogram_canvas)
-
 
     k = cv.waitKey(1) & 0xFF
 
