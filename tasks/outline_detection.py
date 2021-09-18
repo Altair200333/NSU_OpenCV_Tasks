@@ -15,6 +15,7 @@ cv.namedWindow(edges_window_name)
 def pass_callback(x):
     pass
 
+
 treshold1 = 100
 treshold2 = 100
 
@@ -70,6 +71,13 @@ def onMouse(event, x, y, flags, param):
 
 cv.setMouseCallback(edges_window_name, onMouse)
 
+total_area = img.shape[0] * img.shape[1]
+
+font = cv.FONT_HERSHEY_SIMPLEX
+fontScale = 1
+fontColor = (200, 100, 255)
+thickness = 1
+
 while True:
     edges_canny = cv.Canny(img, treshold1, treshold2)
 
@@ -87,6 +95,8 @@ while True:
         # point in bounding box
         result = x <= x_pos <= x + w and y <= y_pos <= y + h
         if result:
+            area = cv.contourArea(c)
+            cv.putText(canvas, 'area: '+"{:.1f}".format(area*100/total_area)+'%', (np.int32(x + w / 2 - 40), np.int32(y + w / 2 - 30)), font, 0.6, fontColor,thickness)
             draw_countour_bounds(c, canvas, (244, 0, 0))
 
     cv.imshow('img', cv.add(img, overlay))
