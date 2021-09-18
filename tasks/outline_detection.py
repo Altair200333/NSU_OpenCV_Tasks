@@ -3,16 +3,17 @@ import numpy as np
 from tools import *
 from imutils import contours
 
-img = cv.imread('../imgs/number_plates/car1.jpg')
+img = cv.imread('../imgs/shapes.jpg')
 img = clipImg(img, 600)
 
 controlls_window_name = 'controlls'
+edges_window_name = 'edges'
 cv.namedWindow(controlls_window_name)
+cv.namedWindow(edges_window_name)
 
 
 def pass_callback(x):
     pass
-
 
 treshold1 = 100
 treshold2 = 100
@@ -43,6 +44,32 @@ cv.createTrackbar('treshold 2', controlls_window_name, 220, 500, set_treshold2)
 canvas = np.zeros(img.shape, dtype=np.uint8)
 overlay = np.zeros(img.shape, dtype=np.uint8)
 
+
+def draw_bounding_boxes(canvas):
+    for c in contours:
+        draw_countour_bounds(c, canvas)
+
+
+def draw_countour_bounds(c, canvas, color=(0, 255, 0)):
+    x, y, w, h = cv.boundingRect(c)
+    cv.rectangle(canvas, (x, y), (x + w, y + h), color, 1)
+
+
+x_pos = 1
+y_pos = 1
+
+
+def onMouse(event, x, y, flags, param):
+    global x_pos, y_pos
+    x = np.clip(x, 0, img.shape[1] - 1)
+    y = np.clip(y, 0, img.shape[0] - 1)
+
+    x_pos = x
+    y_pos = y
+
+
+cv.setMouseCallback(edges_window_name, onMouse)
+
 while True:
     edges_canny = cv.Canny(img, treshold1, treshold2)
 
@@ -50,14 +77,17 @@ while True:
 
     canvas[:, :, :] = 0
     overlay[:, :, :] = 0
+
+    draw_bounding_boxes(canvas)
+
+    cv.drawContours(overlay, contours, -1, (0, 255, 0), 2)
+
     for c in contours:
-        # Obtain bounding rectangle for each contour
         x, y, w, h = cv.boundingRect(c)
-
-        # Draw bounding box rectangle, crop using Numpy slicing
-        cv.rectangle(canvas, (x, y), (x + w, y + h), (0, 255, 0), 1)
-
-    cv.drawContours(overlay, contours, -1, (0, 255, 0))
+        # point in bounding box
+        result = x <= x_pos <= x + w and y <= y_pos <= y + h
+        if result:
+            draw_countour_bounds(c, canvas, (244, 0, 0))
 
     cv.imshow('img', cv.add(img, overlay))
 
@@ -67,7 +97,7 @@ while True:
     else:
         result = cv.cvtColor(edges_canny, cv.COLOR_GRAY2BGR)
 
-    cv.imshow("edges", result)
+    cv.imshow(edges_window_name, result)
 
     k = cv.waitKey(1) & 0xFF
 
