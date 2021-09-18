@@ -3,7 +3,7 @@ import numpy as np
 from tools import *
 from imutils import contours
 
-img = cv.imread('../imgs/shapes.jpg')
+img = cv.imread('../imgs/cards.jpg')
 img = clipImg(img, 600)
 
 controlls_window_name = 'controlls'
@@ -78,11 +78,54 @@ fontScale = 1
 fontColor = (200, 100, 255)
 thickness = 1
 
+
+def filter_contours(cntrs, tresh=50):
+    filtered = []
+    for c in cntrs:
+        if cv.contourArea(c) > tresh:
+            filtered.append(c)
+    return filtered
+
+
+def approx_contour(cntr):
+    perimeter = cv.arcLength(cntr, True)
+    approx = cv.approxPolyDP(cntr, 0.02 * perimeter, True)
+    return approx
+
+
+def filered_approx_contours(cntrs):
+    filtered = []
+    for c in cntrs:
+        perimeter = cv.arcLength(c, True)
+        approx = cv.approxPolyDP(c, 0.02 * perimeter, True)
+        if cv.contourArea(approx) > 100:
+            filtered.append(approx)
+    return filtered
+
+
+def classify_shape(cntr):
+    approx = approx_contour(cntr)
+
+    if len(approx) == 3:
+        shape = "triangle"
+
+    elif len(approx) == 4:
+        (x, y, w, h) = cv.boundingRect(approx)
+        ar = w / float(h)
+        shape = "square" if ar >= 0.95 and ar <= 1.05 else "rectangle"
+
+    else:
+        shape = "circle"
+    # return the name of the shape
+    return shape
+
+
 while True:
     edges_canny = cv.Canny(img, treshold1, treshold2)
 
     contours, hierarchy = cv.findContours(edges_canny, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
+    contours = filter_contours(contours)
     canvas[:, :, :] = 0
     overlay[:, :, :] = 0
 
@@ -90,15 +133,19 @@ while True:
 
     cv.drawContours(overlay, contours, -1, (0, 255, 0), 2)
 
-    for c in contours:
+    for idx, c in enumerate(contours):
         x, y, w, h = cv.boundingRect(c)
         # point in bounding box
         result = x <= x_pos <= x + w and y <= y_pos <= y + h
         if result:
             area = cv.contourArea(c)
-            cv.putText(canvas, 'area: '+"{:.1f}".format(area*100/total_area)+'%', (np.int32(x + w / 2 - 40), np.int32(y + w / 2 - 30)), font, 0.6, fontColor,thickness)
-            draw_countour_bounds(c, canvas, (244, 0, 0))
 
+            draw_countour_bounds(c, canvas, (244, 0, 0))
+            cv.putText(canvas, 'area: ' + "{:.1f}".format(area * 100 / total_area) + '%',
+                       (np.int32(x + w / 2 - 40), np.int32(y + h / 2)), font, 0.6, fontColor, thickness)
+            type = classify_shape(c)
+            cv.putText(canvas, 'type: ' + type,
+                       (np.int32(x + w / 2 - 40), np.int32(y + h / 2 + 30)), font, 0.6, fontColor, thickness)
     cv.imshow('img', cv.add(img, overlay))
 
     result = canvas
