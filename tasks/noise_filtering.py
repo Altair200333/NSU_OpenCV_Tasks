@@ -28,7 +28,7 @@ def create_noise_img(img, param, uniform: bool = True):
 noise = create_noise_img(img, 20, False)
 
 current_method = 0
-methods_count = 4
+methods_count = 6
 
 uniform_noise = 0
 noise_scale = 20
@@ -45,6 +45,8 @@ def get_noise_state():
 
 
 def filter(img, method):
+    global methods_count
+
     filtered_img = img
     if method == 0:
         filtered_img = cv.blur(img, (3, 3))
@@ -54,8 +56,15 @@ def filter(img, method):
         kernel_size = 3
         kernel = np.ones((kernel_size, kernel_size), dtype=np.float32)
         kernel /= (kernel_size * kernel_size)
-        filtered_img = cv.filter2D(img, -1, kernel)
+        filtered_img = cv.filter2D(img, cv.CV_64F, kernel)
     if method == 3:
+        filtered_img = cv.blur(img, (3, 3))
+        sobelxy = cv.Sobel(src=filtered_img, ddepth=cv.CV_64F, dx=1, dy=1, ksize=5)
+        filtered_img = sobelxy
+    if method == 4:
+        filtered_img = cv.Laplacian(img, cv.CV_64F, ksize=3)
+
+    if method == methods_count - 1:
         filtered_img = img
 
     return filtered_img
