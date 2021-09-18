@@ -44,19 +44,19 @@ def get_noise_state():
     return False if uniform_noise == 0 else True
 
 
-def filter(img, method):
+def filter(img, method, param=3):
     global methods_count
 
     filtered_img = img
     if method == 0:
-        filtered_img = cv.blur(img, (3, 3))
+        filtered_img = cv.blur(img, (param, param))
     if method == 1:
         filtered_img = cv.medianBlur(img, 3)
     if method == 2:
         kernel_size = 3
         kernel = np.ones((kernel_size, kernel_size), dtype=np.float32)
         kernel /= (kernel_size * kernel_size)
-        filtered_img = cv.filter2D(img, cv.CV_64F, kernel)
+        filtered_img = cv.filter2D(img, cv.CV_8U, kernel)
     if method == 3:
         filtered_img = cv.blur(img, (3, 3))
         sobelxy = cv.Sobel(src=filtered_img, ddepth=cv.CV_64F, dx=1, dy=1, ksize=5)
@@ -72,6 +72,13 @@ def filter(img, method):
 
 controlls_window_name = 'controlls'
 cv.namedWindow(controlls_window_name)
+
+filter_parameter = 3
+
+
+def set_parameter(x):
+    global filter_parameter
+    filter_parameter = max(x, 1)
 
 
 def set_noise_range(x):
@@ -95,6 +102,7 @@ def set_uniform(x):
 cv.createTrackbar('ns range', controlls_window_name, 20, 150, set_noise_range)
 cv.createTrackbar('uniform', controlls_window_name, 0, 1, set_uniform)
 cv.createTrackbar('method', controlls_window_name, current_method, methods_count - 1, next_method)
+cv.createTrackbar('param', controlls_window_name, filter_parameter, 15, set_parameter)
 
 histogram_canvas = np.zeros((200, 400, 3), np.uint8)
 
@@ -102,7 +110,7 @@ while True:
 
     cv.imshow("noise", cv.convertScaleAbs(noise))
 
-    filtered = filter(noise, current_method)
+    filtered = filter(noise, current_method, filter_parameter)
     cv.imshow('filtered', filtered)
 
     histogram_canvas[:, :, :] = 70
