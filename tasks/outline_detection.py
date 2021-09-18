@@ -123,7 +123,7 @@ def classify_shape(cntr):
 while True:
     edges_canny = cv.Canny(img, treshold1, treshold2)
 
-    contours, hierarchy = cv.findContours(edges_canny, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv.findContours(edges_canny, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     contours = filter_contours(contours)
     canvas[:, :, :] = 0
