@@ -3,7 +3,7 @@ import numpy as np
 from tools import *
 from imutils import contours
 
-img = cv.imread('../imgs/cards.jpg')
+img = cv.imread('../imgs/shapes.jpg')
 img = clipImg(img, 600)
 
 controlls_window_name = 'controlls'
@@ -141,11 +141,26 @@ while True:
             area = cv.contourArea(c)
 
             draw_countour_bounds(c, canvas, (244, 0, 0))
-            cv.putText(canvas, 'area: ' + "{:.1f}".format(area * 100 / total_area) + '%',
+            area_ratio = area * 100 / total_area
+            cv.putText(canvas, 'area: ' + "{:.1f}".format(area_ratio) + '%',
                        (np.int32(x + w / 2 - 40), np.int32(y + h / 2)), font, 0.6, fontColor, thickness)
-            type = classify_shape(c)
-            cv.putText(canvas, 'type: ' + type,
+
+            size_label = 'small'
+            if area_ratio < 1:
+                size_label = 'small'
+            elif area_ratio < 5:
+                size_label = 'medium'
+            else:
+                size_label = 'large'
+
+            cv.putText(canvas, size_label,
+                       (np.int32(x + w / 2 - 40), np.int32(y + h / 2) + 15), font, 0.6, fontColor, thickness)
+
+            fig_type = classify_shape(c)
+            cv.putText(canvas, 'type: ' + fig_type,
                        (np.int32(x + w / 2 - 40), np.int32(y + h / 2 + 30)), font, 0.6, fontColor, thickness)
+
+
     cv.imshow('img', cv.add(img, overlay))
 
     result = canvas
