@@ -7,7 +7,10 @@ def prepareHistData(img, dst):
     hist, bins = np.histogram(img.ravel(), 256, [0, 256])
 
     # scale it to fit the shape of "canvas"
-    hist = hist / hist.max() * dst.shape[0]
+    maximum = hist.max()
+    if maximum == 0:
+        maximum = 1
+    hist = hist / maximum * dst.shape[0]
 
     # now append X axis by stacking transposed histogram and linspace
     stack = np.vstack((np.linspace(0, dst.shape[1], 256), hist.reshape(-1))).T

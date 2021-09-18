@@ -51,18 +51,26 @@ def filter(img, method, param=3):
     if method == 0:
         filtered_img = cv.blur(img, (param, param))
     if method == 1:
-        filtered_img = cv.medianBlur(img, 3)
+        if param % 2 == 0:
+            param += 1
+        filtered_img = cv.medianBlur(img, param)
     if method == 2:
-        kernel_size = 3
+        kernel_size = param
         kernel = np.ones((kernel_size, kernel_size), dtype=np.float32)
         kernel /= (kernel_size * kernel_size)
         filtered_img = cv.filter2D(img, cv.CV_8U, kernel)
     if method == 3:
+        if param % 2 == 0:
+            param += 1
+
         filtered_img = cv.blur(img, (3, 3))
-        sobelxy = cv.Sobel(src=filtered_img, ddepth=cv.CV_64F, dx=1, dy=1, ksize=5)
+        sobelxy = cv.Sobel(src=filtered_img, ddepth=cv.CV_64F, dx=1, dy=1, ksize=param)
         filtered_img = sobelxy
     if method == 4:
-        filtered_img = cv.Laplacian(img, cv.CV_64F, ksize=3)
+        if param % 2 == 0:
+            param += 1
+
+        filtered_img = cv.Laplacian(img, cv.CV_64F, ksize=param)
 
     if method == methods_count - 1:
         filtered_img = img
