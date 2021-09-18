@@ -41,27 +41,32 @@ cv.createTrackbar('treshold 1', controlls_window_name, 200, 500, set_treshold1)
 cv.createTrackbar('treshold 2', controlls_window_name, 220, 500, set_treshold2)
 
 canvas = np.zeros(img.shape, dtype=np.uint8)
+overlay = np.zeros(img.shape, dtype=np.uint8)
+
 while True:
     edges_canny = cv.Canny(img, treshold1, treshold2)
 
-    cnts = cv.findContours(edges_canny, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[0]
+    contours, hierarchy = cv.findContours(edges_canny, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
     canvas[:, :, :] = 0
-    for c in cnts:
+    overlay[:, :, :] = 0
+    for c in contours:
         # Obtain bounding rectangle for each contour
         x, y, w, h = cv.boundingRect(c)
 
         # Draw bounding box rectangle, crop using Numpy slicing
         cv.rectangle(canvas, (x, y), (x + w, y + h), (0, 255, 0), 1)
 
-    cv.imshow('img', img)
+    cv.drawContours(overlay, contours, -1, (0, 255, 0))
+
+    cv.imshow('img', cv.add(img, overlay))
 
     result = canvas
     if mode == 0:
         result = cv.add(cv.cvtColor(edges_canny, cv.COLOR_GRAY2BGR), canvas)
     else:
         result = cv.cvtColor(edges_canny, cv.COLOR_GRAY2BGR)
+
     cv.imshow("edges", result)
 
     k = cv.waitKey(1) & 0xFF
