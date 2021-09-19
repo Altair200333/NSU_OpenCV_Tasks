@@ -126,6 +126,22 @@ def create_controls(name, mode):
 create_controls(shi_tomachi_name, 0)
 create_controls(harris_name, 1)
 
+brightness = 0
+contrast = 1
+
+def set_brightness(x):
+    global brightness
+    brightness = x
+
+
+def set_contrast(x):
+    global contrast
+    contrast = 1.0 + x * 3.0 / 100
+
+cv.namedWindow('adjustment')
+cv.createTrackbar('brightness', 'adjustment', 0, 100, set_brightness)
+cv.createTrackbar('contrast', 'adjustment', 0, 100, set_contrast)
+
 
 def draw_control_points(canvas):
     for point in points:
@@ -171,7 +187,9 @@ while True:
 
     draw_control_points(controls_overlay)
 
-    warped_img = warpImage(img, points[0], points[1], points[2], points[3])
+    adjusted = cv.convertScaleAbs(img, alpha=contrast, beta=brightness)
+
+    warped_img = warpImage(adjusted, points[0], points[1], points[2], points[3])
 
     # ---
     gray_warped = cv.cvtColor(warped_img, cv.COLOR_BGR2GRAY)
@@ -195,7 +213,7 @@ while True:
     corners = cv.goodFeaturesToTrack(gray, corners_count, corners_quality, min_dst)
     draw_markers(tomachi_canvas, corners)
 
-    #cv.imshow('img', cv.add(img, tomachi_canvas))
+    # cv.imshow('img', cv.add(img, tomachi_canvas))
 
     k = cv.waitKey(1) & 0xFF
 
