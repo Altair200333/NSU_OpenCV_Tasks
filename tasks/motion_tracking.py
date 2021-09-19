@@ -6,8 +6,6 @@ from tools import *
 img = cv.imread("../imgs/lines/check.jpg")
 img = clipImg(img, 600)
 
-canvas = np.zeros(img.shape, dtype=np.uint8)
-
 
 def warpImage(img, p1, p2, p3, p4):
     input_uv = np.float32([[0, 0], [img.shape[1], 0], [img.shape[1], img.shape[0]], [0, img.shape[0]]])
@@ -23,6 +21,9 @@ def warpImage(img, p1, p2, p3, p4):
 capturedPoint = -1
 radius = 30
 points = [[0, 0], [img.shape[1], 0], [img.shape[1], img.shape[0]], [0, img.shape[0]]]
+
+tomachi_canvas = np.zeros(img.shape, dtype=np.uint8)
+harris_canvas = np.zeros(img.shape, dtype=np.uint8)
 
 
 def resetPoint():
@@ -51,6 +52,7 @@ def onMouse(event, x, y, flags, param):
     if event == cv.EVENT_MOUSEMOVE and capturedPoint != -1:
         points[capturedPoint] = [x, y]
 
+
 shi_tomachi_window = 'warped'
 harris_window = 'har'
 cv.namedWindow(shi_tomachi_window)
@@ -58,7 +60,7 @@ cv.namedWindow(harris_window)
 cv.setMouseCallback(shi_tomachi_window, onMouse)
 cv.setMouseCallback(harris_window, onMouse)
 
-warp_canvas = np.zeros(img.shape, dtype=np.uint8)
+# warp_canvas = np.zeros(img.shape, dtype=np.uint8)
 
 shi_tomachi_name = 'shi-tomachi'
 harris_name = 'harris'
@@ -98,6 +100,8 @@ def set_block_size(x):
 
 def set_ksize(x):
     global k_size
+    if x % 2 == 0:
+        x += 1
     k_size = max(1, x)
 
 
@@ -109,7 +113,6 @@ def set_k(x):
 # 0 - goodFeaturesToTrack; 1 - cornerHarris
 
 def create_controls(name, mode):
-
     if mode == 0:
         cv.createTrackbar('corners', name, 100, 255, set_corners_count)
         cv.createTrackbar('quality', name, 2, 100, set_corners_quality)
@@ -124,9 +127,9 @@ create_controls(shi_tomachi_name, 0)
 create_controls(harris_name, 1)
 
 
-def draw_control_points():
+def draw_control_points(canvas):
     for point in points:
-        cv.circle(warp_canvas, point, radius, (0, 50, 200), 2)
+        cv.circle(canvas, point, radius, (0, 50, 200), 2)
 
 
 def draw_markers(canvas, corners):
@@ -136,35 +139,69 @@ def draw_markers(canvas, corners):
         cv.drawMarker(canvas, (x, y), (255, 100, 0), cv.MARKER_CROSS, 22, 2)
 
 
+# 0 - points on top of image; 1 - only points
+display_mode = 0
+
+
+def next_display_mode(x):
+    global display_mode
+    display_mode = (display_mode + x) % 2
+
+
+controls_overlay = np.zeros(img.shape, dtype=np.uint8)
+
+
+def compose_output(img, track_data, controlls):
+    global display_mode
+    output = img
+    if display_mode == 0:
+        output = cv.add(img, track_data)
+        output = cv.add(output, controlls)
+    else:
+        output = cv.add(track_data, controlls)
+
+    return output
+
+
 while True:
 
-    canvas[:, :, :] = 0
+    tomachi_canvas[:, :, :] = 0
+    harris_canvas[:, :, :] = 0
+    controls_overlay[:, :, :] = 0
 
-    warp_canvas[:, :, :] = 0
-    draw_control_points()
+    draw_control_points(controls_overlay)
 
-    warped = warpImage(img, points[0], points[1], points[2], points[3])
-    gray_warped = cv.cvtColor(warped, cv.COLOR_BGR2GRAY)
-    warped_corners = cv.goodFeaturesToTrack(cv.cvtColor(warped, cv.COLOR_BGR2GRAY), corners_count, corners_quality,
-                                            min_dst,
-                                            mask=cv.inRange(gray_warped, 1, 255))
+    warped_img = warpImage(img, points[0], points[1], points[2], points[3])
 
-    cornhar = cv.cornerHarris(gray_warped, 2, 3, 0.04)
-    corn = warp_canvas.copy()
-    corn[cornhar > 0.01 * cornhar.max()] = [0, 0, 255]
-    cv.imshow('har', cv.convertScaleAbs(corn))
+    # ---
+    gray_warped = cv.cvtColor(warped_img, cv.COLOR_BGR2GRAY)
+    tomachi_corners = cv.goodFeaturesToTrack(cv.cvtColor(warped_img, cv.COLOR_BGR2GRAY), corners_count, corners_quality,
+                                             min_dst,
+                                             mask=cv.inRange(gray_warped, 1, 255))
 
-    draw_markers(warp_canvas, warped_corners)
+    draw_markers(tomachi_canvas, tomachi_corners)
 
-    cv.imshow(shi_tomachi_window, cv.add(warped, warp_canvas))
+    cv.imshow(shi_tomachi_window, compose_output(warped_img, tomachi_canvas, controls_overlay))
+    # ---
+
+    harris_corners = cv.cornerHarris(gray_warped, block_size, k_size, k_param)
+    harris_canvas[harris_corners > 0.01 * harris_corners.max()] = [0, 0, 255]
+
+    cv.imshow(harris_window, compose_output(warped_img, harris_canvas, controls_overlay))
+
+    # --
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
     corners = cv.goodFeaturesToTrack(gray, corners_count, corners_quality, min_dst)
-    draw_markers(canvas, corners)
+    draw_markers(tomachi_canvas, corners)
 
-    cv.imshow('img', cv.add(img, canvas))
+    #cv.imshow('img', cv.add(img, tomachi_canvas))
 
     k = cv.waitKey(1) & 0xFF
 
+    if k == ord('q'):
+        next_display_mode(-1)
+    if k == ord('e'):
+        next_display_mode(1)
     if k == 27:
         break
