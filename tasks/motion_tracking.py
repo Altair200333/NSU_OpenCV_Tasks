@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 
 from tools import *
+from color_correction import *
 
 img = cv.imread("../imgs/lines/check.jpg")
 img = clipImg(img, 600)
@@ -127,7 +128,7 @@ create_controls(shi_tomachi_name, 0)
 create_controls(harris_name, 1)
 
 brightness = 0
-contrast = 1
+contrast = 0
 
 def set_brightness(x):
     global brightness
@@ -136,11 +137,11 @@ def set_brightness(x):
 
 def set_contrast(x):
     global contrast
-    contrast = 1.0 + x * 3.0 / 100
+    contrast = x - 127
 
 cv.namedWindow('adjustment')
-cv.createTrackbar('brightness', 'adjustment', 0, 100, set_brightness)
-cv.createTrackbar('contrast', 'adjustment', 0, 100, set_contrast)
+cv.createTrackbar('brightness', 'adjustment', 0, 255, set_brightness)
+cv.createTrackbar('contrast', 'adjustment', 127, 255, set_contrast)
 
 
 def draw_control_points(canvas):
@@ -187,7 +188,7 @@ while True:
 
     draw_control_points(controls_overlay)
 
-    adjusted = cv.convertScaleAbs(img, alpha=contrast, beta=brightness)
+    adjusted = apply_brightness_contrast(img, brightness, contrast)
 
     warped_img = warpImage(adjusted, points[0], points[1], points[2], points[3])
 
