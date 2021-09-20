@@ -78,7 +78,6 @@ while True:
     hits = getHits(trainKeypoints, list(match.trainIdx for match in matches))
     drawHits(canvas, hits)
 
-
     matchCanvas = clipImg(matchCanvas, 1400)
 
     cv.imshow('matches', matchCanvas)
