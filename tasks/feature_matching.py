@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 
 from image_transform import *
+from tasks.tracking_tools import *
 from tools import *
 from color_correction import *
 
@@ -49,12 +50,6 @@ canvas = np.zeros(img.shape, dtype=np.uint8)
 orb = cv.ORB_create()
 matcher = cv.BFMatcher()
 
-
-def getHits(trainKeypoints, ids):
-    hits = []
-    for match in ids:
-        hits.append(trainKeypoints[match])
-    return hits
 
 
 def drawHits(canvas, hits):
