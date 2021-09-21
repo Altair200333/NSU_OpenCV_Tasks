@@ -15,7 +15,7 @@ if cap.isOpened() == False:
     print("Error opening video  file")
 
 frames = []
-for i in range(min(300, int(totalFrames))):
+for i in range(min(30, int(totalFrames))):
     ret, frame = cap.read()
     if not ret:
         break
@@ -49,7 +49,13 @@ cv.namedWindow('controls')
 
 cv.createTrackbar('frame', 'controls', 0, int(totalFrames) - 1, set_frame_number)
 
-canvas = np.zeros((500, 500, 3), dtype=np.uint8)
+canvas = np.zeros((500, 800, 3), dtype=np.uint8)
+
+# frame; point; position
+history = np.zeros((totalFrames, len(queryKeypoints), 2))
+history[:, :, :] = -1
+for i in range(history.shape[1]):
+    history[0, i] = queryKeypoints[i].pt
 
 for i in range(totalFrames):
     frame = frames[int(i)]
@@ -59,13 +65,28 @@ for i in range(totalFrames):
     train_hits = getHits(trainKeypoints, list(match.trainIdx for match in matches))
     query_hits = getHits(queryKeypoints, list(match.queryIdx for match in matches))
 
-    x = canvas.shape[1] / totalFrames * i
+    if i > 0:
+        for j in range(history.shape[1]):
+            history[i, j] = history[i - 1, j]
+    # x = canvas.shape[1] / totalFrames * i
     for idx, match in enumerate(matches):
+        history[i, match.queryIdx] = train_hits[idx].pt
+        # cv.line(canvas, (np.int0(x), np.int0(0)), (np.int0(x), np.int0(abs(train_hits[idx].pt[0] - query_hits[idx].pt[0]))), (10, 20, 200))
+        # cv.line(canvas, (np.int0(x), np.int0(0)), (np.int0(x), np.int0(abs(train_hits[idx].pt[1] - query_hits[idx].pt[1]))), (200, 20, 20))
 
-        cv.line(canvas, (np.int0(x), np.int0(0)),
-                (np.int0(x), np.int0(abs(train_hits[idx].pt[0] - query_hits[idx].pt[0]))), (10, 20, 200))
-        cv.line(canvas, (np.int0(x), np.int0(0)),
-                (np.int0(x), np.int0(abs(train_hits[idx].pt[1] - query_hits[idx].pt[1]))), (200, 20, 20))
+differences = np.zeros(history.shape)
+for j in range(history.shape[0]):
+    if j > 0:
+        differences[j] = history[j] - history[j - 1]
+# print(differences)
+for i in range(history.shape[0]):
+    prev = differences[max(0, i - 1)]
+    curr = differences[i]
+    scale_x = canvas.shape[1] / history.shape[0]
+    for j in range(history.shape[1]):
+        cv.line(canvas, (np.int0((i - 1) * scale_x), np.int0(abs(prev[j][0]))),(np.int0(i * scale_x), np.int0(abs(curr[j][0]))), (10, 20, 200))
+        cv.line(canvas, (np.int0((i - 1) * scale_x), np.int0(abs(prev[j][1]))),(np.int0(i * scale_x), np.int0(abs(curr[j][1]))), (20, 200, 20))
+        # print(offset)
 
 while True:
     # canvas[:, :, :] = 0
