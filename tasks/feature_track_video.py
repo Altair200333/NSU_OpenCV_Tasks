@@ -8,7 +8,7 @@ from tasks.tracking_tools import *
 
 frame_size = 900
 
-cap = cv.VideoCapture('../videos/building2_hd.mp4')
+cap = cv.VideoCapture('../videos/aerial.mp4')
 totalFrames = cap.get(cv.CAP_PROP_FRAME_COUNT)
 
 if cap.isOpened() == False:
