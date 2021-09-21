@@ -15,7 +15,7 @@ if cap.isOpened() == False:
     print("Error opening video  file")
 
 frames = []
-for i in range(min(30, int(totalFrames))):
+for i in range(min(10, int(totalFrames))):
     ret, frame = cap.read()
     if not ret:
         break
@@ -77,14 +77,18 @@ for j in range(history.shape[0]):
     if j > 0:
         differences[j] = history[j] - history[j - 1]
 # print(differences)
+weight_canvas = np.zeros(canvas.shape, dtype=np.uint8)
 for i in range(history.shape[0]):
     prev = differences[max(0, i - 1)]
     curr = differences[i]
     scale_x = canvas.shape[1] / history.shape[0]
     for j in range(history.shape[1]):
-        cv.line(canvas, (np.int0((i - 1) * scale_x), np.int0(abs(prev[j][0]))),(np.int0(i * scale_x), np.int0(abs(curr[j][0]))), (10, 20, 200))
+        weight_canvas[:,:,:] = 0
+        cv.line(weight_canvas, (np.int0((i - 1) * scale_x), np.int0(abs(prev[j][0]))),(np.int0(i * scale_x), np.int0(abs(curr[j][0]))), (10, 20, 200))
 
-        cv.line(canvas, (np.int0((i - 1) * scale_x), np.int0(abs(prev[j][1]))),(np.int0(i * scale_x), np.int0(abs(curr[j][1]))), (20, 200, 20))
+        cv.line(weight_canvas, (np.int0((i - 1) * scale_x), np.int0(abs(prev[j][1]))),(np.int0(i * scale_x), np.int0(abs(curr[j][1]))), (20, 200, 20))
+
+        canvas = cv.addWeighted(canvas, 1.0, weight_canvas, 0.1, 0)
         # print(offset)
 
 canvas = np.flipud(canvas)
