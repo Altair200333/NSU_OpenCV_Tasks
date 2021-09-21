@@ -71,8 +71,6 @@ for i in range(totalFrames):
     # x = canvas.shape[1] / totalFrames * i
     for idx, match in enumerate(matches):
         history[i, match.queryIdx] = train_hits[idx].pt
-        # cv.line(canvas, (np.int0(x), np.int0(0)), (np.int0(x), np.int0(abs(train_hits[idx].pt[0] - query_hits[idx].pt[0]))), (10, 20, 200))
-        # cv.line(canvas, (np.int0(x), np.int0(0)), (np.int0(x), np.int0(abs(train_hits[idx].pt[1] - query_hits[idx].pt[1]))), (200, 20, 20))
 
 differences = np.zeros(history.shape)
 for j in range(history.shape[0]):
@@ -84,12 +82,15 @@ for i in range(history.shape[0]):
     curr = differences[i]
     scale_x = canvas.shape[1] / history.shape[0]
     for j in range(history.shape[1]):
-        cv.line(canvas, (np.int0((i - 1) * scale_x), np.int0(abs(prev[j][0]))),(np.int0(i * scale_x), np.int0(abs(curr[j][0]))), (10, 20, 200))
-        cv.line(canvas, (np.int0((i - 1) * scale_x), np.int0(abs(prev[j][1]))),(np.int0(i * scale_x), np.int0(abs(curr[j][1]))), (20, 200, 20))
+        cv.line(canvas, (np.int0((i - 1) * scale_x), np.int0(abs(prev[j][0]))),
+                (np.int0(i * scale_x), np.int0(abs(curr[j][0]))), (10, 20, 200))
+        cv.line(canvas, (np.int0((i - 1) * scale_x), np.int0(abs(prev[j][1]))),
+                (np.int0(i * scale_x), np.int0(abs(curr[j][1]))), (20, 200, 20))
         # print(offset)
 
+canvas_overlay = np.zeros(canvas.shape, dtype=np.uint8)
 while True:
-    # canvas[:, :, :] = 0
+    canvas_overlay[:, :, :] = 0
 
     frame = frames[int(frame_number)]
 
@@ -109,8 +110,9 @@ while True:
     # for i, match in enumerate(matches):
     #    offset = np.int32(train_hits[i].pt) - np.int32(query_hits[i].pt)
     #    cv.line(canvas, center, center + offset, (200,200,200))
-
-    cv.imshow('deviation', canvas)
+    cv.line(canvas_overlay, (np.int0(frame_number * canvas.shape[1] / history.shape[0]), 0),
+            (np.int0(frame_number * canvas.shape[1] / history.shape[0]), canvas.shape[0]), (200, 200, 200))
+    cv.imshow('deviation', cv.add(canvas, canvas_overlay))
     k = cv.waitKey(1) & 0xFF
 
     if k == 27:
