@@ -39,8 +39,8 @@ def nextMode(x):
     mode = (mode + x) % modes_count
 
 
-cv.createTrackbar('treshold 1', controlls_window_name, 200, 500, set_treshold1)
-cv.createTrackbar('treshold 2', controlls_window_name, 220, 500, set_treshold2)
+cv.createTrackbar('treshold 1', controlls_window_name, 200, 800, set_treshold1)
+cv.createTrackbar('treshold 2', controlls_window_name, 220, 800, set_treshold2)
 
 canvas = np.zeros(img.shape, dtype=np.uint8)
 overlay = np.zeros(img.shape, dtype=np.uint8)
@@ -82,7 +82,8 @@ thickness = 1
 def filter_contours(cntrs, tresh=50):
     filtered = []
     for c in cntrs:
-        if cv.contourArea(c) > tresh:
+        approx = approx_contour(c)
+        if cv.contourArea(approx) > tresh:
             filtered.append(c)
     return filtered
 
@@ -103,6 +104,22 @@ def filered_approx_contours(cntrs):
     return filtered
 
 
+def vect_len(v):
+    v = np.reshape(v, -1)
+    return np.sqrt(v[0] ** 2 + v[1] ** 2)
+
+
+def getPt(x):
+    x = np.reshape(x, -1)
+    return [x[0], x[1]]
+
+
+def diff(x, y):
+    x = x.ravel()
+    y = y.ravel()
+    return [x[0] - y[0], x[1] - y[1]]
+
+
 def classify_shape(cntr):
     approx = approx_contour(cntr)
 
@@ -111,17 +128,34 @@ def classify_shape(cntr):
 
     elif len(approx) == 4:
         (x, y, w, h) = cv.boundingRect(approx)
-        ar = w / float(h)
-        shape = "square" if ar >= 0.95 and ar <= 1.05 else "rectangle"
+        fig_area = cv.contourArea(approx)
+        approx_area = vect_len(diff(approx[0], approx[1])) ** 2
+
+        ar = fig_area / approx_area
+        shape = "square" if 0.9 <= ar <= 1.2 else "rectangle"
 
     else:
-        shape = "circle"
+        M = cv.moments(approx)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+
+        radius = vect_len(approx[0] - (cX, cY))
+
+        approx_area = np.pi * (radius ** 2)
+        fig_area = cv.contourArea(approx)
+        ar = approx_area / fig_area
+
+        if 0.9 <= ar <= 1.2:
+            shape = "circle"
+        else:
+            shape = "ellipse"
     # return the name of the shape
     return shape
 
 
 while True:
-    edges_canny = cv.Canny(img, treshold1, treshold2)
+    blurred = cv.blur(img, (3, 3))
+    edges_canny = cv.Canny(blurred, treshold1, treshold2)
 
     contours, hierarchy = cv.findContours(edges_canny, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
@@ -159,7 +193,6 @@ while True:
             fig_type = classify_shape(c)
             cv.putText(canvas, 'type: ' + fig_type,
                        (np.int32(x + w / 2 - 40), np.int32(y + h / 2 + 30)), font, 0.6, fontColor, thickness)
-
 
     cv.imshow('img', cv.add(img, overlay))
 
