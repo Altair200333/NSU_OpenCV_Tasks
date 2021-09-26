@@ -118,7 +118,7 @@ while True:
 
     cv.imshow("noise", cv.convertScaleAbs(noise))
 
-    filtered = filter(noise, current_method, filter_parameter)
+    filtered = cv.convertScaleAbs(filter(noise, current_method, filter_parameter))
     cv.imshow('filtered', filtered)
 
     histogram_canvas[:, :, :] = 70
