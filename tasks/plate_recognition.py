@@ -7,14 +7,17 @@ from tasks.tracking_tools import *
 from tools import *
 from color_correction import *
 import imutils
+from image_transform import *
+import statistics
+import re
 
 img = cv.imread("../imgs/number_plates/car1.jpg")
-img = clipImg(img, 1000)
+img = clipImg(img, 700)
 
 
 def approx_contour(cntr):
     perimeter = cv.arcLength(cntr, True)
-    approx = cv.approxPolyDP(cntr, 0.01 * perimeter, True)
+    approx = cv.approxPolyDP(cntr, 0.02 * perimeter, True)
     return approx
 
 
@@ -64,11 +67,76 @@ def parseText(screenCnt):
     (topx, topy) = (np.min(x), np.min(y))
     (bottomx, bottomy) = (np.max(x), np.max(y))
     Cropped = gray[topx:bottomx + 1, topy:bottomy + 1]
-    thresh = cv.adaptiveThreshold(Cropped, params['max_val'], cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 5, params['tresh'])
+    thresh = cv.adaptiveThreshold(Cropped, params['max_val'], cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 5,
+                                  params['tresh'])
     text = pytesseract.image_to_string(thresh, lang='eng',
                                        config='--oem 3 -l eng --psm 6')
     print(text)
     cv.imshow('new', thresh)
+
+
+def process_rectangle(img, cntr):
+    x, y, w, h = cv.boundingRect(cntr)
+    res = np.zeros((h, w), dtype=np.uint8)
+
+    res = warpImageFit(img, cntr[0][0], cntr[1][0], cntr[2][0], cntr[3][0], res)
+
+    # fix flipness
+    res = np.fliplr(res)
+
+    inverted = preprocess_plate(res)
+
+    contours = find_cntrs(inverted)
+
+    # sort contours left-to-right
+    sorted_contours = sorted(contours, key=lambda ctr: cv.boundingRect(ctr)[0])
+
+    canvas = cv.cvtColor(inverted, cv.COLOR_GRAY2BGR)
+    # cv.drawContours(canvas, sorted_contours, -1, (255, 30, 0), 2)
+
+    filtered_cntrs = []
+    for letter in sorted_contours:
+        x, y, w, h = cv.boundingRect(letter)
+        if 0.5 <= h / canvas.shape[0] <= 1 and 0.05 <= w / canvas.shape[1] <= 0.2:
+            filtered_cntrs.append(letter)
+
+    found_text = ""
+    for letter in filtered_cntrs:
+        x, y, w, h = cv.boundingRect(letter)
+        roi = inverted[y - 10:y + h + 10, x - 10:x + w + 10]
+
+        #cv.imshow(str(x), roi)
+        text = pytesseract.image_to_string(roi,
+                                           config='-c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ --psm 8 --oem 3')
+
+        clean_text = re.sub('[\W_]+', '', text)
+        found_text += clean_text
+
+        cv.rectangle(canvas, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+    print(found_text)
+    cv.imshow('region', canvas)
+
+
+def find_cntrs(inverted):
+    try:
+        contours, hierarchy = cv.findContours(inverted, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    except:
+        ret_img, contours, hierarchy = cv.findContours(inverted, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    return contours
+
+
+def preprocess_plate(res):
+    # resize image to three times as large as original for better readability
+    gray = cv.resize(res, None, fx=3, fy=3, interpolation=cv.INTER_CUBIC)
+    # threshold the image using Otsus method to preprocess for tesseract
+    ret, thresh = cv.threshold(gray, 0, 255, cv.THRESH_OTSU | cv.THRESH_BINARY_INV)
+    # create rectangular kernel for dilation
+    rect_kern = cv.getStructuringElement(cv.MORPH_RECT, (5, 5))
+    # apply dilation to make regions more clear
+    dilation = cv.dilate(thresh, rect_kern, iterations=1)
+    inverted = 255 - dilation
+    return inverted
 
 
 while True:
@@ -81,12 +149,11 @@ while True:
     contours, hierarchy = cv.findContours(edged, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
     contours = filter_contours(contours)
 
+    for cnt in contours:
+        process_rectangle(gray, cnt)
+
     canvas = cv.cvtColor(gray, cv.COLOR_GRAY2BGR)
     cv.drawContours(canvas, contours, -1, (255, 30, 0), 2)
-    parseText(contours[1])
-    # for cntr in contours:
-    #    parseText(cntr)
-    # cv.imshow("tresh", gray)
     cv.imshow("img", canvas)
 
     k = cv.waitKey(1) & 0xFF
