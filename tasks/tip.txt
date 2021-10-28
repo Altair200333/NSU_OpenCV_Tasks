@@ -1,0 +1,7 @@
+6.1 - 6.3 - outline_detection.py
+7         - noise_filtering.py
+8         - hough_transform.py
+9         - corner_detection.py
+10        - feature_matching.py; feature_track_video.py
+11        - water_shed.py
+12        - plate_recognition.py; другой репозиторий с мордами

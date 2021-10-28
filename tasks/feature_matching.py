@@ -6,8 +6,11 @@ from tasks.tracking_tools import *
 from tools import *
 from color_correction import *
 
-img = cv.imread("../imgs/lines/building1.jpeg")
-img = clipImg(img, 600)
+img1 = cv.imread("../imgs/match/tesla.jpg")
+img1 = clipImg(img1, 600)
+
+img2 = cv.imread("../imgs/match/tesla.jpg")
+img2 = clipImg(img2, 600)
 
 
 def dst(a, b):
@@ -16,7 +19,7 @@ def dst(a, b):
 
 capturedPoint = -1
 radius = 30
-points = [[0, 0], [img.shape[1], 0], [img.shape[1], img.shape[0]], [0, img.shape[0]]]
+points = [[0, 0], [img2.shape[1], 0], [img2.shape[1], img2.shape[0]], [0, img2.shape[0]]]
 
 
 def draw_control_points(canvas):
@@ -27,8 +30,8 @@ def draw_control_points(canvas):
 def onMouse(event, x, y, flags, param):
     global points, capturedPoint
 
-    x = np.clip(x, 0, img.shape[1] - 1)
-    y = np.clip(y, 0, img.shape[0] - 1)
+    x = np.clip(x, 0, img2.shape[1] - 1)
+    y = np.clip(y, 0, img2.shape[0] - 1)
 
     if event == cv.EVENT_LBUTTONDOWN:
         for idx, point in enumerate(points):
@@ -45,11 +48,10 @@ def onMouse(event, x, y, flags, param):
 cv.namedWindow('warped')
 cv.setMouseCallback('warped', onMouse)
 
-canvas = np.zeros(img.shape, dtype=np.uint8)
+canvas = np.zeros(img2.shape, dtype=np.uint8)
 
 orb = cv.ORB_create()
 matcher = cv.BFMatcher()
-
 
 
 def drawHits(canvas, hits):
@@ -60,20 +62,20 @@ def drawHits(canvas, hits):
 while True:
     canvas[:, :, :] = 0
 
-    transformed = warpImage(img, points[0], points[1], points[2], points[3])
+    transformed = warpImage(img2, points[0], points[1], points[2], points[3])
 
-    queryKeypoints, queryDescriptors = orb.detectAndCompute(cv.cvtColor(img, cv.COLOR_BGR2GRAY), None)
+    queryKeypoints, queryDescriptors = orb.detectAndCompute(cv.cvtColor(img1, cv.COLOR_BGR2GRAY), None)
     trainKeypoints, trainDescriptors = orb.detectAndCompute(cv.cvtColor(transformed, cv.COLOR_BGR2GRAY), None)
 
     matches = matcher.match(queryDescriptors, trainDescriptors)
 
-    matchCanvas = cv.drawMatches(img, queryKeypoints, transformed, trainKeypoints, matches[:20], None,
+    matchCanvas = cv.drawMatches(img1, queryKeypoints, transformed, trainKeypoints, matches[:20], None,
                                  matchColor=(200, 20, 20), singlePointColor=(20, 200, 20))
 
     hits = getHits(trainKeypoints, list(match.trainIdx for match in matches))
     drawHits(canvas, hits)
 
-    matchCanvas = clipImg(matchCanvas, 1400)
+    matchCanvas = clipImg(matchCanvas, 1000)
 
     cv.imshow('matches', matchCanvas)
 
