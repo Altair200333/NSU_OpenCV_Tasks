@@ -13,7 +13,7 @@ import re
 import easyocr
 from alpr_tools import *
 
-img = cv.imread("../imgs/number_plates/car2.jpg")
+img = cv.imread("../imgs/number_plates/car1.jpg")
 img = clipImg(img, 700)
 
 reader = easyocr.Reader(['en'], gpu=True)

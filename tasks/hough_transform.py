@@ -4,7 +4,7 @@ import numpy as np
 from histogram_utils import plotBinHistogram
 from tools import *
 
-img = cv.imread("../imgs/lines/persp1.jpg")
+img = cv.imread("../imgs/lines/heli.jpg")
 img = clipImg(img, 600)
 
 controls_window_name = 'controlls'
@@ -56,10 +56,12 @@ while True:
 
     for line in lines:
         x1, y1, x2, y2 = line[0]
-        cv.line(overlay, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv.line(overlay, (x1, y1), (x2, y2), (0, 20, 255), 2)
 
     output = cv.add(img, overlay)
     cv.imshow('img', output)
+    cv.imshow('lines', overlay)
+
     k = cv.waitKey(1) & 0xFF
 
     if k == 27:
