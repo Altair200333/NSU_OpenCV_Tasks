@@ -3,7 +3,7 @@ import numpy as np
 from tools import *
 from imutils import contours
 
-img = cv.imread('../imgs/shapes.jpg')
+img = cv.imread('../imgs/im3.jpg')
 img = clipImg(img, 600)
 
 controlls_window_name = 'controlls'
@@ -44,6 +44,7 @@ cv.createTrackbar('treshold 2', controlls_window_name, 220, 800, set_treshold2)
 
 canvas = np.zeros(img.shape, dtype=np.uint8)
 overlay = np.zeros(img.shape, dtype=np.uint8)
+approx_cntrs = np.zeros(img.shape, dtype=np.uint8)
 
 
 def draw_bounding_boxes(canvas):
@@ -81,11 +82,13 @@ thickness = 1
 
 def filter_contours(cntrs, tresh=50):
     filtered = []
+    approxes = []
     for c in cntrs:
         approx = approx_contour(c)
         if cv.contourArea(approx) > tresh:
             filtered.append(c)
-    return filtered
+            approxes.append(approx)
+    return filtered, approxes
 
 
 def approx_contour(cntr):
@@ -98,7 +101,7 @@ def filered_approx_contours(cntrs):
     filtered = []
     for c in cntrs:
         perimeter = cv.arcLength(c, True)
-        approx = cv.approxPolyDP(c, 0.02 * perimeter, True)
+        approx = cv.approxPolyDP(c, 0.01 * perimeter, True)
         if cv.contourArea(approx) > 100:
             filtered.append(approx)
     return filtered
@@ -120,8 +123,7 @@ def diff(x, y):
     return [x[0] - y[0], x[1] - y[1]]
 
 
-def classify_shape(cntr):
-    approx = approx_contour(cntr)
+def classify_shape(cntr, approx):
 
     if len(approx) == 3:
         shape = "triangle"
@@ -159,20 +161,28 @@ while True:
 
     contours, hierarchy = cv.findContours(edges_canny, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
-    contours = filter_contours(contours)
+    contours, approxs = filter_contours(contours)
     canvas[:, :, :] = 0
     overlay[:, :, :] = 0
+    approx_cntrs[:, :, :] = 0
 
     draw_bounding_boxes(canvas)
 
-    cv.drawContours(overlay, contours, -1, (0, 255, 0), 2)
+    cv.drawContours(overlay, contours, -1, (50, 255, 0), 2)
+    cv.drawContours(approx_cntrs, approxs, -1, (0, 20, 255), 2)
 
     for idx, c in enumerate(contours):
         x, y, w, h = cv.boundingRect(c)
         # point in bounding box
         result = x <= x_pos <= x + w and y <= y_pos <= y + h
         if result:
-            area = cv.contourArea(c)
+            hull = cv.convexHull(c)
+
+            cv.drawContours(approx_cntrs, [hull], 0, (255,10,10))
+
+            area = cv.contourArea(hull)
+
+            fig_type = classify_shape(c, approxs[idx])
 
             draw_countour_bounds(c, canvas, (244, 0, 0))
             area_ratio = area * 100 / total_area
@@ -190,11 +200,11 @@ while True:
             cv.putText(canvas, size_label,
                        (np.int32(x + w / 2 - 40), np.int32(y + h / 2) + 15), font, 0.6, fontColor, thickness)
 
-            fig_type = classify_shape(c)
             cv.putText(canvas, 'type: ' + fig_type,
                        (np.int32(x + w / 2 - 40), np.int32(y + h / 2 + 30)), font, 0.6, fontColor, thickness)
 
     cv.imshow('img', cv.add(img, overlay))
+    cv.imshow('approx', approx_cntrs)
 
     result = canvas
     if mode == 0:
