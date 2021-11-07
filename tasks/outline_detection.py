@@ -3,7 +3,14 @@ import numpy as np
 from tools import *
 from imutils import contours
 
-img = cv.imread('../imgs/im3.jpg')
+paths = [
+    '../imgs/im3.jpg',
+    "../imgs/im4.jpg",
+    "../imgs/im5.jpg",
+    "../imgs/shapes.jpg",
+]
+
+img = cv.imread(paths[3])
 img = clipImg(img, 600)
 
 controlls_window_name = 'controlls'
@@ -39,8 +46,8 @@ def nextMode(x):
     mode = (mode + x) % modes_count
 
 
-cv.createTrackbar('treshold 1', controlls_window_name, 200, 800, set_treshold1)
-cv.createTrackbar('treshold 2', controlls_window_name, 220, 800, set_treshold2)
+cv.createTrackbar('treshold 1', controlls_window_name, treshold1, 800, set_treshold1)
+cv.createTrackbar('treshold 2', controlls_window_name, treshold2, 800, set_treshold2)
 
 canvas = np.zeros(img.shape, dtype=np.uint8)
 overlay = np.zeros(img.shape, dtype=np.uint8)
@@ -80,12 +87,15 @@ fontColor = (200, 100, 255)
 thickness = 1
 
 
-def filter_contours(cntrs, tresh=50):
+def filter_contours(cntrs, tresh=100):
     filtered = []
     approxes = []
     for c in cntrs:
+        hull = cv.convexHull(c)
+
+        area = cv.contourArea(hull)
         approx = approx_contour(c)
-        if cv.contourArea(approx) > tresh:
+        if area > tresh:
             filtered.append(c)
             approxes.append(approx)
     return filtered, approxes
@@ -95,16 +105,6 @@ def approx_contour(cntr):
     perimeter = cv.arcLength(cntr, True)
     approx = cv.approxPolyDP(cntr, 0.02 * perimeter, True)
     return approx
-
-
-def filered_approx_contours(cntrs):
-    filtered = []
-    for c in cntrs:
-        perimeter = cv.arcLength(c, True)
-        approx = cv.approxPolyDP(c, 0.01 * perimeter, True)
-        if cv.contourArea(approx) > 100:
-            filtered.append(approx)
-    return filtered
 
 
 def vect_len(v):
@@ -149,8 +149,10 @@ def classify_shape(cntr, approx):
 
         if 0.9 <= ar <= 1.2:
             shape = "circle"
-        else:
+        elif 0.5 <= ar <= 2.0:
             shape = "ellipse"
+        else:
+            shape = "unknown"
     # return the name of the shape
     return shape
 
@@ -182,7 +184,11 @@ while True:
 
             area = cv.contourArea(hull)
 
-            fig_type = classify_shape(c, approxs[idx])
+            fig_type = 'unknown'
+            try:
+                fig_type = classify_shape(c, approxs[idx])
+            except:
+                pass
 
             draw_countour_bounds(c, canvas, (244, 0, 0))
             area_ratio = area * 100 / total_area
