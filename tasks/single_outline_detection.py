@@ -10,7 +10,7 @@ paths = [
     "../imgs/shapes.jpg",
 ]
 
-img = cv.imread(paths[2])
+img = cv.imread(paths[0])
 img = clipImg(img, 600)
 
 controlls_window_name = 'controlls'
