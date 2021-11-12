@@ -2,10 +2,9 @@ from cv2 import cv2 as cv
 import numpy as np
 from match_time_from_url import *
 
+id = 411831
 
-URL = "ewin-challenge-cup-season-2/group-stage/digital-vs-crocodile-412289"
-
-(time, region, boxes), img = match_time_url(URL)
+(time, region, boxes), img = match_time_id(id)
 
 canvas = cv.cvtColor(region, cv.COLOR_GRAY2BGR)
 
@@ -15,7 +14,6 @@ for box in boxes:
 canvas = clipImg(canvas, 500)
 
 print(time)
-
 
 while True:
     cv.imshow('time', canvas)

@@ -5,6 +5,8 @@ from imutils import contours
 from matplotlib import pyplot as plt
 from functools import cmp_to_key
 
+time_region_width = 40
+
 
 class Number:
     def __init__(self, num, box, isColon=False):
@@ -63,7 +65,7 @@ def math_time(image):
 
     top_left, bottom_right, _ = find_region(method, img, template)
 
-    time_region = img[top_left[1]:bottom_right[1], bottom_right[0]:bottom_right[0] + 40]
+    time_region = img[top_left[1]:bottom_right[1], bottom_right[0]:bottom_right[0] + time_region_width]
 
     # numeric templates
     numbers = []
