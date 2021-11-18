@@ -31,10 +31,26 @@ def match_time_url(url):
     return math_time(image), image
 
 
-# как такого id мачта там нема, ближайшее шо есть это число в адресной строке, которое вроде уникально для кажой игры, с виду это чуть ли не порядковый номер
-# поиска по этому номеру тоже штатного нет, но методом тактического тыка было обнаружено, что при замене id в адресной строке, сайт перенаправит сам на нужный матч
-# то есть нужный механизм там есть, но его достать только таким котылём можно
-def match_time_id(id):
+def match_time_id(id, game_num=1):
+    page_url = "https://game-tournaments.com/"
+
+    # mimic ajax request
+    headers = {'content-type': 'application/x-www-form-urlencoded; charset=UTF-8', 'x-requested-with': 'XMLHttpRequest'}
+    raw_data = 'game=&rid=matches&ajax=block_video&data%5Bid%5D=' + str(id) + '&data%5Bnum%5D=' + str(game_num)
+
+    page = requests.post(page_url, headers=headers, data=raw_data)
+
+    soup = BeautifulSoup(page.content, "html.parser")
+
+    job_elements = soup.find_all("a", class_="g-rezults")
+    address = job_elements[0]["href"]
+    image_url = 'https://en.game-tournaments.com' + address
+
+    image = url_to_image(image_url)
+
+    return math_time(image), image
+
+    # old method;
     page_url = "https://game-tournaments.com/dota-2/bts-pro-series-season-9/sea/boom-vs-nigma-galaxy-sea-" + str(id)
     page = requests.get(page_url)
     soup = BeautifulSoup(page.content, "html.parser")
