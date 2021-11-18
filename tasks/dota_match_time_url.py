@@ -11,7 +11,7 @@ canvas = cv.cvtColor(region, cv.COLOR_GRAY2BGR)
 for box in boxes:
     cv.rectangle(canvas, box.box[0], box.box[1], (200, 20, 20))
 
-canvas = clipImg(canvas, 500)
+canvas = clipImg(canvas, 500, cv.INTER_NEAREST)
 
 print(time)
 

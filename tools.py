@@ -6,8 +6,8 @@ def scaleImg(image, scale: float):
     return cv.resize(image, (int(width * scale), int(height * scale)))
 
 
-def clipImg(image, max_size):
+def clipImg(image, max_size, filter=cv.INTER_CUBIC):
     width, height = image.shape[1], image.shape[0]
     max_dim = max(width, height)
     ratio = float(max_size) / max_dim
-    return cv.resize(image, (int(width*ratio), int(height*ratio)), interpolation=cv.INTER_CUBIC)
+    return cv.resize(image, (int(width*ratio), int(height*ratio)), interpolation=filter)
