@@ -4,12 +4,14 @@ from tools import *
 from imutils import contours
 
 paths = [
-    '../imgs/im3.jpg', #клюшка
-    "../imgs/im5.jpg", #планета
-    "../imgs/im4.jpg", #микро клюшка
+    '../imgs/im3.jpg',  # 0 - клюшка
+    "../imgs/im5.jpg",  # 1 - планета
+    "../imgs/im4.jpg",  # 2 - микро клюшка
+    "../imgs/triangle.jpg",  # 3 - треуг
+    "../imgs/rect.jpg",  # 4 - прямоуг
 ]
 
-img = cv.imread(paths[2])
+img = cv.imread(paths[1])
 img = clipImg(img, 600)
 
 controlls_window_name = 'controlls'
@@ -78,6 +80,40 @@ treshold2 = 100
 
 grades = [0.7, 0.3]
 
+
+def classify_shape(approx):
+    if len(approx) == 3:
+        shape = "triangle"
+
+    elif len(approx) == 4:
+        (x, y, w, h) = cv.boundingRect(approx)
+        fig_area = cv.contourArea(approx)
+        approx_area = vect_len(diff(approx[0], approx[1])) ** 2
+
+        ar = fig_area / approx_area
+        shape = "square" if 0.9 <= ar <= 1.2 else "rectangle"
+
+    else:
+        M = cv.moments(approx)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+
+        radius = vect_len(approx[0] - (cX, cY))
+
+        approx_area = np.pi * (radius ** 2)
+        fig_area = cv.contourArea(approx)
+        ar = approx_area / fig_area
+
+        if 0.9 <= ar <= 1.2:
+            shape = "circle"
+        elif 0.5 <= ar <= 2.0:
+            shape = "ellipse"
+        else:
+            shape = "unknown"
+    # return the name of the shape
+    return shape
+
+
 def classify_area(cntr):
     global total_area, grades, width, height
 
@@ -87,10 +123,10 @@ def classify_area(cntr):
 
     min_dim = min(width, height)
     max_ext = max(w, h)
-    ratio = max_ext/min_dim
-    if max_ext/min_dim >= grades[0]:
+    ratio = max_ext / min_dim
+    if max_ext / min_dim >= grades[0]:
         return ratio, 'large'
-    elif max_ext/min_dim >= grades[1]:
+    elif max_ext / min_dim >= grades[1]:
         return ratio, 'medium'
     else:
         return ratio, 'small'
@@ -168,6 +204,12 @@ def flatten(cntrs):
     return np.asarray(list_of_pts)
 
 
+def approx_contour(cntr):
+    perimeter = cv.arcLength(cntr, True)
+    approx = cv.approxPolyDP(cntr, 0.02 * perimeter, True)
+    return approx
+
+
 while True:
     canvas[:, :, :] = 0
     overlay[:, :, :] = 0
@@ -176,6 +218,7 @@ while True:
     hull, total_contour = getContours(img, treshold1, treshold2)
 
     area_ratio, size_label = classify_area(hull)
+    type = classify_shape(approx_contour(hull))
 
     if mode == 1:
         cv.drawContours(overlay, total_contour, -1, (50, 255, 0), 1)
@@ -185,6 +228,8 @@ while True:
                    (np.int32(x + w / 2 - 40), np.int32(y + h / 2)), font, 0.6, fontColor, thickness)
         cv.putText(overlay, size_label,
                    (np.int32(x + w / 2 - 40), np.int32(y + h / 2) + 15), font, 0.6, fontColor, thickness)
+        cv.putText(overlay, type,
+                   (np.int32(x + w / 2 - 40), np.int32(y + h / 2) + 32), font, 0.6, fontColor, thickness)
 
     cv.drawContours(overlay, [hull], 0, (255, 10, 10))
 
