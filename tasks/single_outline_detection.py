@@ -4,13 +4,12 @@ from tools import *
 from imutils import contours
 
 paths = [
-    '../imgs/im3.jpg',
-    "../imgs/im4.jpg",
-    "../imgs/im5.jpg",
-    "../imgs/shapes.jpg",
+    '../imgs/im3.jpg', #клюшка
+    "../imgs/im5.jpg", #планета
+    "../imgs/im4.jpg", #микро клюшка
 ]
 
-img = cv.imread(paths[0])
+img = cv.imread(paths[2])
 img = clipImg(img, 600)
 
 controlls_window_name = 'controlls'
@@ -22,6 +21,9 @@ def pass_callback(x):
 
 
 total_area = img.shape[0] * img.shape[1]
+
+width = img.shape[1]
+height = img.shape[0]
 
 # text params
 font = cv.FONT_HERSHEY_SIMPLEX
@@ -74,15 +76,26 @@ treshold2 = 100
 
 # find optimal params
 
-grades = [0.6, 0.2]
-
+grades = [0.7, 0.3]
 
 def classify_area(cntr):
-    global total_area, grades
+    global total_area, grades, width, height
+
+    x, y, w, h = cv.boundingRect(hull)
 
     area = cv.contourArea(cntr)
-    ratio = area / total_area
 
+    min_dim = min(width, height)
+    max_ext = max(w, h)
+    ratio = max_ext/min_dim
+    if max_ext/min_dim >= grades[0]:
+        return ratio, 'large'
+    elif max_ext/min_dim >= grades[1]:
+        return ratio, 'medium'
+    else:
+        return ratio, 'small'
+
+    ratio = area / total_area
     size = 'large'
     if ratio >= grades[0]:
         size = 'large'
