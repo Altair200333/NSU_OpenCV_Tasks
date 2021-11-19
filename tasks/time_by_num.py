@@ -2,9 +2,10 @@ from cv2 import cv2 as cv
 import numpy as np
 from match_time_from_url import *
 
-id = 414253  # 411831
+id = 21
 
-(time, region, boxes), img = match_time_id(id)
+(time, region, boxes), img = match_time_number(id)
+
 
 canvas = cv.cvtColor(region, cv.COLOR_GRAY2BGR)
 

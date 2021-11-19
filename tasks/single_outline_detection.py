@@ -9,9 +9,10 @@ paths = [
     "../imgs/im4.jpg",  # 2 - микро клюшка
     "../imgs/triangle.jpg",  # 3 - треуг
     "../imgs/rect.jpg",  # 4 - прямоуг
+    "../imgs/snow.jpg",  # 5 - snowflake
 ]
 
-img = cv.imread(paths[1])
+img = cv.imread(paths[5])
 img = clipImg(img, 600)
 
 controlls_window_name = 'controlls'

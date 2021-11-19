@@ -3,7 +3,7 @@ import numpy as np
 from tools import *
 from histogram_utils import *
 
-img = cv.imread('../imgs/portraits/niki.jpg')
+img = cv.imread('../imgs/an/b1.jpg')#cv.imread('../imgs/portraits/niki.jpg')
 img = clipImg(img, 600)
 
 width = img.shape[1]
