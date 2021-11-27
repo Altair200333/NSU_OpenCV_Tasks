@@ -59,7 +59,7 @@ while True:
     if frame_number > 0:
         good_new = []
         good_old = []
-        for i in range(0, frame_number - 1):
+        for i in range(max(0, frame_number - 20), frame_number - 1):
             good_new_next, good_old_next = find_points_between(frames[i], frames[i + 1])
 
             good_new.extend(good_new_next)
@@ -68,8 +68,8 @@ while True:
         for i, (new, old) in enumerate(zip(good_new, good_old)):
             a, b = new.ravel()
             c, d = old.ravel()
-            mask = cv.line(mask, np.int0((a, b)), np.int0((c, d)), color[i % color.shape[0]].tolist(), 2)
-            frame = cv.circle(frame, np.int0((a, b)), 5, color[i % color.shape[0]].tolist(), -1)
+            mask = cv.line(mask, np.int0((a, b)), np.int0((c, d)),(0, 20, 200), 1)
+            frame = cv.circle(frame, np.int0((a, b)), 1, (0, 20, 200), -1)
 
     img = cv.add(frame, mask)
 

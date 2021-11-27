@@ -2,7 +2,7 @@ from cv2 import cv2 as cv
 import numpy as np
 from tools import *
 
-frames, totalFrames = read_frames('../videos/traffic3.mp4')
+frames, totalFrames = read_frames('../videos/traffic1.mp4')
 
 print(totalFrames)
 
@@ -13,7 +13,7 @@ fgMask = backSub.apply(frames[0])
 frame_number = 0
 
 mode = 0
-modes_count = 2
+modes_count = 3
 
 
 def nextMode(x):
@@ -28,16 +28,19 @@ def set_frame_number(x):
 
 
 def set_substractor(x):
-    global backSub
+    global backSub, fgMask
     if x == 0:
         backSub = cv.createBackgroundSubtractorKNN()
     else:
         backSub = cv.createBackgroundSubtractorMOG2()
 
+    for i in range(10):
+        fgMask = backSub.apply(frames[i])
 
-cv.namedWindow('controls')
-cv.createTrackbar('frame', 'controls', 0, int(totalFrames) - 1, set_frame_number)
-cv.createTrackbar('substractor', 'controls', 0, 1, set_substractor)
+
+cv.namedWindow('control')
+cv.createTrackbar('frame', 'control', 0, int(totalFrames) - 1, set_frame_number)
+cv.createTrackbar('substractor', 'control', 0, 1, set_substractor)
 
 while True:
 
@@ -47,6 +50,8 @@ while True:
         cv.imshow('img', frames[frame_number])
     elif mode == 1:
         cv.imshow('img', cv.bitwise_and(frames[frame_number], frames[frame_number], mask=fgMask))
+    elif mode == 2:
+        cv.imshow('img', backSub.getBackgroundImage())
 
     k = cv.waitKey(1) & 0xFF
 
