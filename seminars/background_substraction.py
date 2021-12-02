@@ -2,7 +2,11 @@ from cv2 import cv2 as cv
 import numpy as np
 from tools import *
 
-frames, totalFrames = read_frames('../videos/traffic1.mp4')
+paths = [
+'../videos/traffic1.mp4',
+'../videos/traffic4.mp4'
+]
+frames, totalFrames = read_frames(paths[1])
 
 print(totalFrames)
 
@@ -42,7 +46,13 @@ cv.namedWindow('control')
 cv.createTrackbar('frame', 'control', 0, int(totalFrames) - 1, set_frame_number)
 cv.createTrackbar('substractor', 'control', 0, 1, set_substractor)
 
+playing = False
+
 while True:
+
+    if playing:
+        frame_number = (frame_number + 1) % totalFrames
+        fgMask = backSub.apply(frames[frame_number])
 
     cv.imshow('FG Mask', fgMask)
 
@@ -53,7 +63,10 @@ while True:
     elif mode == 2:
         cv.imshow('img', backSub.getBackgroundImage())
 
-    k = cv.waitKey(1) & 0xFF
+    k = cv.waitKey(10) & 0xFF
+
+    if k == ord('w'):
+        playing = not playing
 
     if k == ord('q'):
         nextMode(-1)
