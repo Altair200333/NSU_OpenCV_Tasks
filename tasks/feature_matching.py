@@ -6,11 +6,29 @@ from tasks.tracking_tools import *
 from tools import *
 from color_correction import *
 
-img1 = cv.imread("../imgs/match/tesla.jpg")
+
+def create_noise(img, param, uniform: bool = True):
+    noise = np.zeros(img.shape)
+    if uniform:
+        cv.randu(noise, -param, param)
+    else:
+        cv.randn(noise, 0, param)
+    return noise
+
+
+def create_noise_img(img, param, uniform: bool = True):
+    noise = create_noise(img, param, uniform)
+    result = np.clip(cv.add(np.float64(img), noise), 0, 255)
+
+    return np.uint8(result)
+
+
+img1 = cv.imread("../imgs/portraits/hana.jpg")
 img1 = clipImg(img1, 600)
 
-img2 = cv.imread("../imgs/match/tesla.jpg")
+img2 = cv.imread("../imgs/portraits/hana.jpg")
 img2 = clipImg(img2, 600)
+img2 = create_noise_img(img2, 50, True)
 
 
 def dst(a, b):
@@ -58,29 +76,33 @@ def drawHits(canvas, hits):
     for hit in hits:
         cv.circle(canvas, np.int32(hit.pt), 6, (20, 20, 200), thickness=2)
 
+canvas[:, :, :] = 0
+
+transformed = warpImage(img2, points[0], points[1], points[2], points[3])
+
+queryKeypoints, queryDescriptors = orb.detectAndCompute(cv.cvtColor(img1, cv.COLOR_BGR2GRAY), None)
+trainKeypoints, trainDescriptors = orb.detectAndCompute(cv.cvtColor(transformed, cv.COLOR_BGR2GRAY), None)
+
+matches = matcher.match(queryDescriptors, trainDescriptors)
+
+fitted = [i for i in range(len(matches)) if (matches[i].distance < 2)]# np.where(np.asarray(matches).distance < 2)[0]
+
+percentage = len(fitted)/len(matches)
+print("matched " + str(percentage))
+matchCanvas = cv.drawMatches(img1, queryKeypoints, transformed, trainKeypoints, np.asarray(matches)[fitted], None, matchColor=(200, 20, 20), singlePointColor=(20, 200, 20))
+
+hits = getHits(trainKeypoints, list(match.trainIdx for match in matches))
+drawHits(canvas, hits)
+
+matchCanvas = clipImg(matchCanvas, 1000)
 
 while True:
-    canvas[:, :, :] = 0
 
-    transformed = warpImage(img2, points[0], points[1], points[2], points[3])
-
-    queryKeypoints, queryDescriptors = orb.detectAndCompute(cv.cvtColor(img1, cv.COLOR_BGR2GRAY), None)
-    trainKeypoints, trainDescriptors = orb.detectAndCompute(cv.cvtColor(transformed, cv.COLOR_BGR2GRAY), None)
-
-    matches = matcher.match(queryDescriptors, trainDescriptors)
-
-    matchCanvas = cv.drawMatches(img1, queryKeypoints, transformed, trainKeypoints, matches[:20], None,
-                                 matchColor=(200, 20, 20), singlePointColor=(20, 200, 20))
-
-    hits = getHits(trainKeypoints, list(match.trainIdx for match in matches))
-    drawHits(canvas, hits)
-
-    matchCanvas = clipImg(matchCanvas, 1000)
 
     cv.imshow('matches', matchCanvas)
 
-    draw_control_points(canvas)
-    cv.imshow('warped', cv.add(transformed, canvas))
+    #draw_control_points(canvas)
+    #cv.imshow('warped', cv.add(transformed, canvas))
     k = cv.waitKey(1) & 0xFF
 
     if k == 27:
