@@ -31,6 +31,27 @@ def match_time_url(url):
     return math_time(image), image
 
 
+def match_time_number(number, game=1):
+    page = np.int(number / 20) + 1
+    idx = number % 20
+
+    print(page)
+    page_url = "https://game-tournaments.com/dota-2/matches"
+    headers = {'content-type': 'application/x-www-form-urlencoded; charset=UTF-8', 'x-requested-with': 'XMLHttpRequest'}
+
+    raw_data = 'game=dota-2&rid=matches&ajax=block_matches_past&data%5Bs%5D=' + str(
+        page) + '&data%5Btype%5D=gg&data%5Bscore%5D=0'
+
+    page = requests.post(page_url, headers=headers, data=raw_data)
+
+    soup = BeautifulSoup(page.content, "html.parser")
+    job_elements = soup.find_all("span", class_='mbutton tresult')
+    id = job_elements[idx]["data-mid"]
+    print(id)
+
+    return match_time_id(id, game)
+
+
 def match_time_id(id, game_num=1):
     page_url = "https://game-tournaments.com/"
 

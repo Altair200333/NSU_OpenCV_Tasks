@@ -9,7 +9,7 @@ from scipy.ndimage import label
 
 frame_size = 600
 
-img = cv.imread("../imgs/coins2.jpg")
+img = cv.imread('../imgs/an/b1.jpg')#cv.imread("../imgs/coins2.jpg")
 img = clipImg(img, frame_size)
 
 controls_window = 'controls'
